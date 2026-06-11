@@ -1,36 +1,47 @@
 export default function SummaryCard({ title, value, type }) {
   const config = {
     total: {
-      color: "text-black",
+      textColor: "text-primary",
+      iconColor: "text-primary",
       icon: "desktop_windows",
-      bg: "bg-gray-100"
+      bg: "bg-surface-container-low",
+      fill: false
     },
     running: {
-      color: "text-emerald-600",
+      textColor: "text-emerald-600",
+      iconColor: "text-emerald-600",
       icon: "play_circle",
-      bg: "bg-emerald-50"
+      bg: "bg-emerald-50",
+      fill: true
     },
     stopped: {
-      color: "text-red-600",
+      textColor: "text-error",
+      iconColor: "text-error",
       icon: "stop_circle",
-      bg: "bg-red-100"
+      bg: "bg-error-container/30",
+      fill: true
     }
   };
 
+  const cardConfig = config[type] || config.total;
+
   return (
-    <div className="bg-white border rounded-lg p-6 shadow flex justify-between items-center">
+    <div className="bg-surface-container-lowest border border-outline-variant/30 p-6 custom-shadow flex items-center justify-between">
       <div>
-        <p className="text-sm text-gray-500 uppercase tracking-wider">
+        <p className="font-label-md text-label-md text-secondary uppercase tracking-wider">
           {title}
         </p>
-        <p className={`text-3xl font-bold mt-1 ${config[type].color}`}>
+        <p className={`font-headline-lg text-headline-lg mt-1 ${cardConfig.textColor}`}>
           {value}
         </p>
       </div>
 
-      <div className={`${config[type].bg} p-3 rounded-xl`}>
-        <span className="material-symbols-outlined text-3xl">
-          {config[type].icon}
+      <div className={`${cardConfig.bg} p-3 rounded-xl`}>
+        <span
+          className={`material-symbols-outlined ${cardConfig.iconColor} text-[32px] block`}
+          style={cardConfig.fill ? { fontVariationSettings: "'FILL' 1" } : {}}
+        >
+          {cardConfig.icon}
         </span>
       </div>
     </div>

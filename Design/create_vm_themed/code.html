@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Create VM | VM Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#dcd9db",
+                        "surface": "#fcf8fa",
+                        "surface-bright": "#fcf8fa",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#574425",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#d5e3fd",
+                        "outline": "#76777d",
+                        "primary-fixed": "#dae2fd",
+                        "surface-variant": "#e4e2e4",
+                        "surface-container-high": "#eae7e9",
+                        "on-secondary-container": "#57657b",
+                        "inverse-surface": "#303032",
+                        "background": "#fcf8fa",
+                        "surface-tint": "#565e74",
+                        "error": "#ba1a1a",
+                        "tertiary": "#000000",
+                        "surface-container-highest": "#e4e2e4",
+                        "on-primary-fixed": "#131b2e",
+                        "secondary-fixed": "#d5e3fd",
+                        "surface-container": "#f0edef",
+                        "secondary-fixed-dim": "#b9c7e0",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-container": "#7c839b",
+                        "tertiary-container": "#271901",
+                        "on-secondary-fixed": "#0d1c2f",
+                        "on-surface": "#1b1b1d",
+                        "primary-container": "#131b2e",
+                        "on-tertiary-container": "#98805d",
+                        "tertiary-fixed-dim": "#dec29a",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#000000",
+                        "on-surface-variant": "#45464d",
+                        "inverse-primary": "#bec6e0",
+                        "secondary": "#515f74",
+                        "inverse-on-surface": "#f3f0f2",
+                        "on-secondary-fixed-variant": "#3a485c",
+                        "tertiary-fixed": "#fcdeb5",
+                        "on-tertiary-fixed": "#271901",
+                        "surface-container-low": "#f6f3f5",
+                        "outline-variant": "#c6c6cd",
+                        "on-background": "#1b1b1d",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "slate-950": "#0f172a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-gap": "16px",
+                        "sidebar-width": "260px",
+                        "base": "4px",
+                        "grid-gutter": "20px",
+                        "container-padding": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["JetBrains Mono"],
+                        "label-md": ["JetBrains Mono"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "headline-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.03em", "fontWeight": "500"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-sm": ["18px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #fcf8fa;
+            font-family: 'Inter', sans-serif;
+        }
+        .card-shadow {
+            box-shadow: 0px 1px 3px rgba(15, 23, 42, 0.08), 0px 4px 6px rgba(15, 23, 42, 0.05);
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #0f172a;
+            ring: 1px solid #0f172a;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- TopNavBar (Shared Component) -->
+<nav class="w-full top-0 sticky bg-surface dark:bg-surface-container-low border-b border-outline-variant dark:border-outline shadow-sm z-50 flex justify-between items-center px-container-padding h-16">
+<div class="flex items-center gap-8">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">VM Manager</span>
+<div class="hidden md:flex items-center gap-6">
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors px-2 py-1" href="#">Dashboard</a>
+<a class="font-body-md text-body-md text-primary dark:text-primary-fixed font-bold border-b-2 border-primary dark:border-primary-fixed pb-1" href="#">Create VM</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors px-2 py-1" href="#">Storage</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors px-2 py-1" href="#">Network</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-on-surface-variant">refresh</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden border border-outline-variant">
+<img alt="Administrator Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyaNXn6umpqdJlwskoFyiuBcxdkdC0IfpB-u3NIPkchx3YCF6lQUPIPxUg6IE_RyPMAp5RGUnCJRUbDauhlJT6h2OCmSwoG6JXHiNlPYdIQGoPJo-ikdOO8mspdhCRj6ClpwhpxZuj-mdrApiPoP3-NTzdKsDSBNm3yBbFIvGU2Q1UhL9x14mqvo_rGpWRE5RTFDbFuDUTbxfwsOiS2AFQQ2deovO6wIOV-wwjHY0zVhZudM6jOXtFWqdwlwgnf6tpaL1zlTCX_YE"/>
+</div>
+</div>
+</nav>
+<main class="flex flex-col items-center justify-center py-12 px-container-padding">
+<!-- Header Section -->
+<div class="w-full max-w-2xl mb-8">
+<h1 class="font-headline-lg text-headline-lg text-primary mb-2">Create Virtual Machine</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Configure and deploy a new cloud instance to your infrastructure cluster.</p>
+</div>
+<!-- Form Card -->
+<div class="w-full max-w-2xl bg-surface-container-lowest rounded-lg border border-outline-variant card-shadow p-container-padding">
+<form class="space-y-6" id="create-vm-form">
+<!-- General Info Group -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-grid-gutter">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface" for="vm-name">VM Name</label>
+<input class="border border-outline-variant rounded-lg px-4 py-2 font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-surface-container-lowest" id="vm-name" placeholder="e.g. production-api-01" type="text"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface" for="vm-id">VM ID</label>
+<div class="relative group">
+<input class="w-full border border-outline-variant rounded-lg px-4 py-2 font-label-md text-label-md focus:border-primary focus:ring-1 focus:ring-primary transition-all pr-12 bg-surface-container-lowest" id="vm-id" placeholder="100" type="text"/>
+<button class="absolute right-2 top-1.5 p-1 text-on-surface-variant hover:text-primary transition-colors" onclick="generateId()" title="Auto-generate ID" type="button">
+<span class="material-symbols-outlined text-[20px]">magic_button</span>
+</button>
+</div>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-wider font-label-sm">Unique numerical identifier</span>
+</div>
+</div>
+<!-- OS Selection -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface" for="os">Operating System</label>
+<div class="relative">
+<select class="w-full border border-outline-variant rounded-lg px-4 py-2 font-body-md text-body-md appearance-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-surface-container-lowest cursor-pointer" id="os">
+<option value="ubuntu-22">Ubuntu 22.04 LTS</option>
+<option value="debian-11">Debian 11</option>
+<option value="centos-9">CentOS Stream 9</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-2.5 pointer-events-none text-on-surface-variant">expand_more</span>
+</div>
+</div>
+<!-- Resource Allocation Grid -->
+<div class="p-4 bg-surface-container-low rounded-lg border border-outline-variant space-y-6">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest border-b border-outline-variant pb-2">Resource Metrics</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-grid-gutter">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface" for="cpu-cores">CPU Cores</label>
+<div class="relative">
+<input class="w-full border border-outline-variant rounded-lg px-4 py-2 font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-surface-container-lowest" id="cpu-cores" max="128" min="1" type="number" value="2"/>
+<span class="absolute right-4 top-2.5 font-label-sm text-on-surface-variant">vCPU</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface" for="memory">Memory</label>
+<div class="relative">
+<input class="w-full border border-outline-variant rounded-lg px-4 py-2 font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-surface-container-lowest" id="memory" max="512" min="1" type="number" value="4"/>
+<span class="absolute right-4 top-2.5 font-label-sm text-on-surface-variant">GB</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface" for="disk-size">Disk Size</label>
+<div class="relative">
+<input class="w-full border border-outline-variant rounded-lg px-4 py-2 font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-surface-container-lowest" id="disk-size" max="10000" min="10" type="number" value="32"/>
+<span class="absolute right-4 top-2.5 font-label-sm text-on-surface-variant">GB NVMe</span>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center justify-end gap-4 pt-4">
+<button class="px-6 py-2 border border-primary rounded-lg text-primary font-body-md font-medium hover:bg-surface-container-high transition-all active:scale-95" type="button">
+                        Cancel
+                    </button>
+<button class="px-8 py-2 bg-slate-950 text-on-primary rounded-lg font-body-md font-medium hover:opacity-90 transition-all shadow-sm active:scale-95 flex items-center gap-2" type="submit">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+                        Create Instance
+                    </button>
+</div>
+</form>
+</div>
+<!-- System Stats Preview -->
+<div class="w-full max-w-2xl mt-12 grid grid-cols-3 gap-grid-gutter">
+<div class="col-span-1 p-4 bg-secondary-container rounded-lg border border-outline-variant">
+<span class="block font-label-sm text-on-secondary-container uppercase mb-1">Available Quota</span>
+<span class="text-headline-sm font-bold text-on-secondary-container">84%</span>
+</div>
+<div class="col-span-2 p-4 bg-surface-container-lowest rounded-lg border border-outline-variant card-shadow flex items-center justify-between">
+<div>
+<span class="block font-label-sm text-on-surface-variant uppercase mb-1">Infrastructure Load</span>
+<div class="flex gap-2 items-end">
+<div class="w-2 h-4 bg-surface-variant rounded-sm"></div>
+<div class="w-2 h-6 bg-surface-variant rounded-sm"></div>
+<div class="w-2 h-3 bg-surface-variant rounded-sm"></div>
+<div class="w-2 h-8 bg-primary rounded-sm"></div>
+<div class="w-2 h-5 bg-surface-variant rounded-sm"></div>
+</div>
+</div>
+<div class="text-right">
+<span class="block font-label-sm text-on-surface-variant uppercase">Estimated Cost</span>
+<span class="text-body-lg font-bold text-on-surface">$12.40<span class="text-sm font-normal text-on-surface-variant">/mo</span></span>
+</div>
+</div>
+</div>
+</main>
+<footer class="mt-auto py-8 text-center border-t border-outline-variant opacity-60">
+<p class="font-label-sm text-label-sm text-on-surface-variant">Infrastructure v2.4.0-stable | © 2024 VM Manager</p>
+</footer>
+<script>
+        function generateId() {
+            const input = document.getElementById('vm-id');
+            const randomId = Math.floor(100 + Math.random() * 900);
+            input.value = randomId;
+            
+            // Interaction feedback
+            input.classList.add('bg-secondary-container');
+            setTimeout(() => {
+                input.classList.remove('bg-secondary-container');
+            }, 500);
+        }
+
+        document.getElementById('create-vm-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalContent = btn.innerHTML;
+            
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[20px]">sync</span> Deploying...';
+            btn.classList.add('opacity-80', 'cursor-not-allowed');
+            
+            setTimeout(() => {
+                alert('VM Creation request queued successfully.');
+                btn.innerHTML = originalContent;
+                btn.classList.remove('opacity-80', 'cursor-not-allowed');
+            }, 1500);
+        });
+
+        const inputs = ['cpu-cores', 'memory', 'disk-size'];
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('input', updateCost);
+        });
+
+        function updateCost() {
+            const cpu = parseInt(document.getElementById('cpu-cores').value) || 0;
+            const ram = parseInt(document.getElementById('memory').value) || 0;
+            const disk = parseInt(document.getElementById('disk-size').value) || 0;
+            
+            const baseCost = 5.00;
+            const total = baseCost + (cpu * 2.5) + (ram * 0.5) + (disk * 0.05);
+            console.log("Estimated: $" + total.toFixed(2));
+        }
+    </script>
+</body></html>

@@ -1,78 +1,64 @@
 import { useState } from "react";
+import { useVM } from "../context/VMContext";
 import MainLayout from "../layouts/MainLayout";
 import SummaryCard from "../components/SummaryCard";
 import SearchBar from "../components/SearchBar";
 import VMTable from "../components/VMTable";
 
 export default function Dashboard() {
+  const { vms, lastUpdated, triggerRefresh } = useVM();
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All Status");
 
-  const vms = [
-    {
-      id: "vm-82910",
-      name: "prod-db-master-01",
-      status: "Running",
-      cpu: "8 vCPU",
-      memory: "16 GB",
-      node: "us-east-1a-node-04",
-    },
-    {
-      id: "vm-82911",
-      name: "staging-redis-cache",
-      status: "Running",
-      cpu: "2 vCPU",
-      memory: "4 GB",
-      node: "us-east-1b-node-12",
-    },
-    {
-      id: "vm-82912",
-      name: "dev-worker-instance",
-      status: "Stopped",
-      cpu: "4 vCPU",
-      memory: "8 GB",
-      node: "us-west-2a-node-01",
-    },
-  ];
+  // Summary Metrics Calculation
+  const totalVMs = vms.length;
+  const runningVMs = vms.filter((vm) => vm.status === "Running").length;
+  const stoppedVMs = vms.filter((vm) => vm.status === "Stopped").length;
 
-  const filtered = vms.filter(
-    (vm) =>
+  // Filter VMs
+  const filteredVMs = vms.filter((vm) => {
+    const matchesSearch =
       vm.name.toLowerCase().includes(search.toLowerCase()) ||
-      vm.id.toLowerCase().includes(search.toLowerCase())
-  );
+      vm.id.toLowerCase().includes(search.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "All Status" || vm.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <MainLayout>
-
-      {/* Header */}
-      <div className="flex justify-between items-end">
+      {/* Header Section */}
+      <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-gray-500">
-            Manage and monitor your virtual machines
-          </p>
+          <h1 className="font-headline-lg text-headline-lg text-primary">Dashboard</h1>
+          <p className="text-secondary font-body-lg text-body-lg">Manage and monitor your virtual machines</p>
         </div>
-
-        <div className="flex items-center gap-2 text-gray-400 text-sm">
-          <span className="material-symbols-outlined text-base">
-            schedule
-          </span>
-          Last updated: 2 mins ago
+        <div className="flex items-center gap-2 text-on-surface-variant/60 font-label-md text-label-md">
+          <span className="material-symbols-outlined text-[16px]">schedule</span>
+          <span>Last updated: {lastUpdated}</span>
         </div>
-      </div>
+      </section>
 
-      {/* Cards */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <SummaryCard title="Total VMs" value="24" type="total" />
-        <SummaryCard title="Running VMs" value="18" type="running" />
-        <SummaryCard title="Stopped VMs" value="6" type="stopped" />
-      </div>
+      {/* Summary Cards */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-grid-gutter">
+        <SummaryCard title="Total VMs" value={totalVMs} type="total" />
+        <SummaryCard title="Running VMs" value={runningVMs} type="running" />
+        <SummaryCard title="Stopped VMs" value={stoppedVMs} type="stopped" />
+      </section>
 
-      {/* Controls */}
-      <SearchBar search={search} setSearch={setSearch} />
+      {/* Controls Section */}
+      <SearchBar
+        search={search}
+        setSearch={setSearch}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        onRefresh={triggerRefresh}
+      />
 
-      {/* Table */}
-      <VMTable data={filtered} />
-
+      {/* VM List Table */}
+      <VMTable data={filteredVMs} />
     </MainLayout>
   );
 }
