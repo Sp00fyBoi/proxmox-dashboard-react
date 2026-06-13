@@ -6,22 +6,56 @@ import MainLayout from "../layouts/MainLayout";
 export default function VMDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { vms, startVM, stopVM, restartVM } = useVM();
+  const { vms, isLoading, startVM, stopVM, restartVM, deleteVM, resizeVM, archiveLogs } = useVM();
 
   const [showStopModal, setShowStopModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showResizeModal, setShowResizeModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState("logs");
+
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
+  const [archiveBanner, setArchiveBanner] = useState(null);
+
+  const [resizeCpu, setResizeCpu] = useState(2);
+  const [resizeMemory, setResizeMemory] = useState(4);
+  const [resizeDisk, setResizeDisk] = useState(32);
 
   // Find current VM
   const vm = vms.find((item) => item.id === id);
 
-  // Redirect to dashboard if VM not found
+  // Sync form inputs when VM specs change
   useEffect(() => {
-    if (!vm) {
+    if (vm) {
+      setResizeCpu(parseInt(vm.cpu) || 2);
+      setResizeMemory(parseInt(vm.memory) || 4);
+      setResizeDisk(parseInt(vm.disk) || 32);
+    }
+  }, [vm]);
+
+  // Redirect to dashboard if VM not found after loading finishes
+  useEffect(() => {
+    if (!isLoading && !vm) {
       const timer = setTimeout(() => navigate("/"), 2000);
       return () => clearTimeout(timer);
     }
-  }, [vm, navigate]);
+  }, [vm, isLoading, navigate]);
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <span className="material-symbols-outlined text-primary text-[48px] animate-spin">sync</span>
+          <h2 className="font-headline-md text-headline-md text-primary mt-4">Loading VM Details...</h2>
+          <p className="font-body-md text-body-md text-on-surface-variant mt-2">
+            Connecting to Proxmox cluster...
+          </p>
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (!vm) {
     return (
@@ -49,13 +83,66 @@ export default function VMDetails() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleStopImmediately = () => {
-    stopVM(vm.id);
+  const handleStopImmediately = async () => {
+    await stopVM(vm.id);
     setShowStopModal(false);
+  };
+
+  const handleDeleteImmediately = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteVM(vm.id);
+      setShowDeleteModal(false);
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to delete VM");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleResizeSubmit = async (e) => {
+    e.preventDefault();
+    setIsResizing(true);
+    try {
+      await resizeVM(vm.id, {
+        cpu: resizeCpu,
+        memory: resizeMemory,
+        disk: resizeDisk
+      });
+      setShowResizeModal(false);
+      alert("VM specs updated successfully.");
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to resize VM");
+    } finally {
+      setIsResizing(false);
+    }
+  };
+
+  const handleArchiveLogs = async () => {
+    setIsArchiving(true);
+    try {
+      const result = await archiveLogs(vm.id);
+      setArchiveBanner(result.status || "Logs archived successfully");
+      setTimeout(() => setArchiveBanner(null), 4000);
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to archive logs");
+    } finally {
+      setIsArchiving(false);
+    }
   };
 
   return (
     <MainLayout>
+      {archiveBanner && (
+        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-500/30 text-emerald-800 rounded-lg flex items-center gap-2 animate-fade-in shadow-sm">
+          <span className="material-symbols-outlined text-[20px] text-emerald-600">check_circle</span>
+          <span className="font-body-md">{archiveBanner}</span>
+        </div>
+      )}
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 mb-6 text-on-surface-variant">
         <Link to="/" className="font-body-sm text-body-sm hover:text-primary transition-colors">
@@ -138,6 +225,14 @@ export default function VMDetails() {
           >
             <span className="material-symbols-outlined text-[20px]">terminal</span>
             Terminal
+          </button>
+
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-error text-error font-body-md text-body-md rounded-lg hover:bg-error-container/20 transition-all active:scale-95 cursor-pointer focus:outline-none"
+          >
+            <span className="material-symbols-outlined text-[20px]">delete</span>
+            Delete
           </button>
         </div>
       </header>
@@ -376,7 +471,7 @@ export default function VMDetails() {
 
           <div className="mt-8">
             <button
-              onClick={() => alert(`Instance resizing tool opened. Update cores or storage configuration.`)}
+              onClick={() => setShowResizeModal(true)}
               className="w-full py-2.5 rounded border-2 border-primary font-label-md text-label-md uppercase tracking-widest hover:bg-primary hover:text-on-primary transition-all cursor-pointer focus:outline-none"
             >
               Resize Instance
@@ -388,12 +483,13 @@ export default function VMDetails() {
         <section className="lg:col-span-7 bg-surface-container-lowest p-container-padding rounded border border-outline-variant card-shadow">
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-headline-sm text-headline-sm text-primary">Recent Events</h2>
-            <button
-              onClick={() => alert("Logs backup initiated. Complete system archive created.")}
-              className="text-secondary hover:text-primary font-label-sm text-label-sm font-bold uppercase focus:outline-none"
-            >
-              Archive Logs
-            </button>
+              <button
+                onClick={handleArchiveLogs}
+                disabled={isArchiving}
+                className="text-secondary hover:text-primary font-label-sm text-label-sm font-bold uppercase focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isArchiving ? "Archiving..." : "Archive Logs"}
+              </button>
           </div>
           <div className="space-y-0 max-h-72 overflow-y-auto pr-1">
             {vm.logs.map((log, idx) => (
@@ -449,6 +545,154 @@ export default function VMDetails() {
           </div>
         </div>
       )}
-    </MainLayout>
+
+        {/* Modal: Delete VM Confirmation */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="modal-overlay absolute inset-0" onClick={() => setShowDeleteModal(false)}></div>
+            <div className="relative bg-surface-container-lowest w-full max-w-md rounded shadow-2xl overflow-hidden border border-outline-variant transition-all transform scale-100 opacity-100 z-10">
+              <div className="p-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-error-container flex items-center justify-center text-error">
+                    <span className="material-symbols-outlined text-[28px] block">warning</span>
+                  </div>
+                  <h3 className="font-headline-sm text-headline-sm text-primary">Delete Instance?</h3>
+                </div>
+                <p className="font-body-md text-body-md text-on-surface-variant mb-6">
+                  Are you sure you want to permanently delete <span className="font-bold text-primary">{vm.name}</span>?
+                  This action cannot be undone and will delete the VM from both Proxmox and the database.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    disabled={isDeleting}
+                    className="flex-1 px-4 py-2 border border-outline text-primary font-body-md text-body-md rounded hover:bg-surface-container-low transition-colors cursor-pointer disabled:opacity-50"
+                    onClick={() => setShowDeleteModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    disabled={isDeleting}
+                    className="flex-1 px-4 py-2 bg-error text-on-error font-body-md text-body-md rounded hover:opacity-90 transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                    onClick={handleDeleteImmediately}
+                  >
+                    {isDeleting ? (
+                      <>
+                        <span className="material-symbols-outlined text-[20px] animate-spin">sync</span>
+                        Deleting...
+                      </>
+                    ) : (
+                      "Delete Permanently"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Resize VM Instance */}
+        {showResizeModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="modal-overlay absolute inset-0" onClick={() => setShowResizeModal(false)}></div>
+            <div className="relative bg-surface-container-lowest w-full max-w-lg rounded shadow-2xl overflow-hidden border border-outline-variant transition-all transform scale-100 opacity-100 z-10">
+              <form onSubmit={handleResizeSubmit} className="p-6 space-y-6">
+                <div className="flex items-center gap-4 mb-2">
+                  <div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined text-[28px] block">settings</span>
+                  </div>
+                  <div>
+                    <h3 className="font-headline-sm text-headline-sm text-primary">Resize VM Instance</h3>
+                    <p className="font-body-sm text-body-sm text-on-surface-variant">Update hardware specs for {vm.name}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-label-md text-label-md text-on-surface" htmlFor="resize-cpu">
+                      CPU Cores
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="resize-cpu"
+                        value={resizeCpu}
+                        onChange={(e) => setResizeCpu(Math.max(1, parseInt(e.target.value) || 1))}
+                        min="1"
+                        max="128"
+                        type="number"
+                        className="w-full border border-outline-variant rounded-lg px-4 py-2 font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary bg-surface-container-lowest focus:outline-none"
+                        required
+                      />
+                      <span className="absolute right-4 top-2.5 font-label-sm text-on-surface-variant">vCPU</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-label-md text-label-md text-on-surface" htmlFor="resize-memory">
+                      Memory
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="resize-memory"
+                        value={resizeMemory}
+                        onChange={(e) => setResizeMemory(Math.max(1, parseInt(e.target.value) || 1))}
+                        min="1"
+                        max="512"
+                        type="number"
+                        className="w-full border border-outline-variant rounded-lg px-4 py-2 font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary bg-surface-container-lowest focus:outline-none"
+                        required
+                      />
+                      <span className="absolute right-4 top-2.5 font-label-sm text-on-surface-variant">GB</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-label-md text-label-md text-on-surface" htmlFor="resize-disk">
+                      Disk NVMe Size
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="resize-disk"
+                        value={resizeDisk}
+                        onChange={(e) => setResizeDisk(Math.max(10, parseInt(e.target.value) || 10))}
+                        min="10"
+                        max="10000"
+                        type="number"
+                        className="w-full border border-outline-variant rounded-lg px-4 py-2 font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary bg-surface-container-lowest focus:outline-none"
+                        required
+                      />
+                      <span className="absolute right-4 top-2.5 font-label-sm text-on-surface-variant">GB</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <button
+                    type="button"
+                    disabled={isResizing}
+                    className="flex-1 px-4 py-2 border border-outline text-primary font-body-md text-body-md rounded hover:bg-surface-container-low transition-colors cursor-pointer disabled:opacity-50"
+                    onClick={() => setShowResizeModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isResizing}
+                    className="flex-1 px-4 py-2 bg-slate-950 text-on-primary font-body-md text-body-md rounded hover:opacity-90 transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isResizing ? (
+                      <>
+                        <span className="material-symbols-outlined text-[20px] animate-spin">sync</span>
+                        Resizing...
+                      </>
+                    ) : (
+                      "Apply Hardware Changes"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </MainLayout>
   );
 }

@@ -41,7 +41,7 @@ export default function CreateVM() {
     setTimeout(() => setHighlightId(false), 500);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!vmName.trim()) {
@@ -59,8 +59,8 @@ export default function CreateVM() {
 
     setIsDeploying(true);
 
-    setTimeout(() => {
-      createVM({
+    try {
+      await createVM({
         name: vmName,
         id: vmId,
         os,
@@ -68,10 +68,14 @@ export default function CreateVM() {
         memory,
         disk,
       });
-      alert("VM Creation request queued successfully.");
-      setIsDeploying(false);
+      alert("VM Creation request completed successfully.");
       navigate("/");
-    }, 1500);
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to create VM");
+    } finally {
+      setIsDeploying(false);
+    }
   };
 
   return (
